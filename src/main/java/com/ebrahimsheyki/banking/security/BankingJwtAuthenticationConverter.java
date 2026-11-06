@@ -9,31 +9,31 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 @Configuration
 public class BankingJwtAuthenticationConverter {
 
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+  @Bean
+  public JwtAuthenticationConverter jwtAuthenticationConverter() {
 
-        JwtGrantedAuthoritiesConverter scopeConverter =
-                new JwtGrantedAuthoritiesConverter();
+    JwtGrantedAuthoritiesConverter scopeConverter =
+        new JwtGrantedAuthoritiesConverter();
 
-        JwtGrantedAuthoritiesConverter roleConverter =
-                new JwtGrantedAuthoritiesConverter();
+    JwtGrantedAuthoritiesConverter roleConverter =
+        new JwtGrantedAuthoritiesConverter();
 
-        roleConverter.setAuthoritiesClaimName("roles");
-        roleConverter.setAuthorityPrefix("ROLE_");
+    roleConverter.setAuthoritiesClaimName("roles");
+    roleConverter.setAuthorityPrefix("ROLE_");
 
-        DelegatingJwtGrantedAuthoritiesConverter authoritiesConverter =
-                new DelegatingJwtGrantedAuthoritiesConverter(
-                        scopeConverter,
-                        roleConverter
-                );
-
-        JwtAuthenticationConverter authenticationConverter =
-                new JwtAuthenticationConverter();
-
-        authenticationConverter.setJwtGrantedAuthoritiesConverter(
-                authoritiesConverter
+    DelegatingJwtGrantedAuthoritiesConverter authoritiesConverter =
+        new DelegatingJwtGrantedAuthoritiesConverter(
+            scopeConverter,
+            roleConverter
         );
 
-        return authenticationConverter;
-    }
+    JwtAuthenticationConverter authenticationConverter =
+        new JwtAuthenticationConverter();
+
+    authenticationConverter.setJwtGrantedAuthoritiesConverter(
+        authoritiesConverter
+    );
+
+    return authenticationConverter;
+  }
 }

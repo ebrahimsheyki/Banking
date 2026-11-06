@@ -16,8 +16,8 @@ VALUES
      'Banking customer'),
 
     ('00000000-0000-0000-0000-000000000002',
-     'EMPLOYEE',
-     'Bank employee'),
+     'BANK_OPERATOR',
+     'Bank operator'),
 
     ('00000000-0000-0000-0000-000000000003',
      'ADMIN',
