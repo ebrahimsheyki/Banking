@@ -17,6 +17,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -102,6 +103,7 @@ public class AuthorizationServerConfig {
   }
 
   @Bean
+  @Profile("!test")
   public JWKSource<SecurityContext> jwkSource(
       @Value("${banking.security.keystore.path}") String keystorePath,
       @Value("${banking.security.keystore.password}") String keystorePassword,
