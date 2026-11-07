@@ -37,6 +37,11 @@ banking:
         password: ${BANKING_BOOTSTRAP_ADMIN_PASSWORD}
         role: ADMIN
 
+      bank-operator:
+        username: ${BANKING_BOOTSTRAP_BANK_OPERATOR_USERNAME:bank-operator}
+        password: ${BANKING_BOOTSTRAP_BANK_OPERATOR_PASSWORD}
+        role: BANK_OPERATOR
+
       customer:
         username: ${BANKING_BOOTSTRAP_CUSTOMER_USERNAME:customer}
         password: ${BANKING_BOOTSTRAP_CUSTOMER_PASSWORD}

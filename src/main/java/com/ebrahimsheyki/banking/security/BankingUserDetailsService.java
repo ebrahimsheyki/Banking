@@ -13,23 +13,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BankingUserDetailsService implements UserDetailsService {
 
-   private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-   public BankingUserDetailsService(UserRepository userRepository) {
-	  this.userRepository = userRepository;
-   }
+  public BankingUserDetailsService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
-   @Override
-   @Transactional(readOnly = true)
-   public @NonNull UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
+  @Override
+  @Transactional(readOnly = true)
+  public @NonNull UserDetails loadUserByUsername(@NonNull String username)
+      throws UsernameNotFoundException {
 
-	  User user = userRepository.findByUsername(username)
-		  .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-	  var authorities = user.getRoles().stream()
-		  .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode().name())).toList();
+    var authorities = user.getRoles().stream()
+        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode().name())).toList();
 
-	  return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
-		  .password(user.getPasswordHash()).authorities(authorities).disabled(!user.isEnabled()).build();
-   }
+    return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
+        .password(user.getPasswordHash()).authorities(authorities).disabled(user.isDisabled())
+        .build();
+  }
 }

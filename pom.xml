@@ -7,10 +7,13 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- =========================================================
+         Project coordinates
+         ========================================================= -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -21,64 +24,110 @@
     <name>banking</name>
     <description>Secure Banking Transaction System</description>
 
+
+    <!-- Properties -->
     <properties>
         <java.version>21</java.version>
+
+        <!-- Intentional H2 version override -->
+        <h2.version>2.5.252</h2.version>
+
+        <!-- Temporary logging security override.
+             Re-evaluate when Spring Boot updates its managed version. -->
+        <logback.version>1.6.6</logback.version>
+
+        <!-- Intentional flyway version override -->
+        <flyway.version>13.12.1</flyway.version>
+
+        <!-- Jackson 3 security override: fixes CVE-2026-110879. -->
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+
+        <!-- JSON-smart security override: fixes CVE-2026-113602. -->
+        <json-smart.version>2.6.1</json-smart.version>
     </properties>
 
+
+    <!-- Dependency management -->
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- ASM security override:
+                 ASM is brought transitively by accessors-smart. -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>9.11.1</version>
+            </dependency>
+
+            <!-- Replace vulnerable / unmaintained android-json
+     used transitively by the JSON assertion library. -->
+            <dependency>
+                <groupId>org.skyscreamer</groupId>
+                <artifactId>jsonassert</artifactId>
+                <version>${jsonassert.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.vaadin.external.google</groupId>
+                        <artifactId>android-json</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+    <!--  Application dependencies  -->
     <dependencies>
 
-        <!-- =========================================================
-             Web
-             ========================================================= -->
+        <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
-        <!-- =========================================================
-        Security
-        ========================================================= -->
+
+        <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- OAuth 2.0 Authorization Server -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
         </dependency>
 
-        <!-- OAuth 2.0 Resource Server -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
 
-        <!-- =========================================================
-             Persistence
-             ========================================================= -->
+
+        <!-- Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- =========================================================
-             Database - H2 (default / zero setup)
-             ========================================================= -->
+
+        <!-- Database: H2 (local / demo) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Development-only console.
+             Keep disabled in production configuration. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-h2console</artifactId>
+            <scope>runtime</scope>
         </dependency>
-        <!-- =========================================================
-             Database - PostgreSQL (Docker / integration)
-             ========================================================= -->
+
+
+        <!-- Database: PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -86,9 +135,7 @@
         </dependency>
 
 
-        <!-- =========================================================
-             Database migrations
-             ========================================================= -->
+        <!-- Database migrations -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
@@ -101,61 +148,58 @@
         </dependency>
 
 
-        <!-- =========================================================
-             Validation
-             ========================================================= -->
+        <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
 
-        <!-- =========================================================
-             Observability
-             ========================================================= -->
+        <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
 
-        <!-- =========================================================
-             Tests
-             ========================================================= -->
+        <!--     Test dependencies     -->
+
+        <!-- Common testing dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- Web MVC tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <!-- Security tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JPA tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Validation tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-
-        <!-- =========================================================
-             Testcontainers
-             ========================================================= -->
+        <!-- Testcontainers -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
@@ -174,12 +218,18 @@
             <scope>test</scope>
         </dependency>
 
+
+        <!-- Replacement for android-json used by the JSON assertion library -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20260814</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
-
-    <!-- =============================================================
-         Build
-         ============================================================= -->
+    <!-- Build -->
     <build>
         <plugins>
 

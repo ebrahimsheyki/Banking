@@ -3,6 +3,7 @@ package com.ebrahimsheyki.banking.user;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,6 +12,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
@@ -19,187 +21,228 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_users_username",
+        columnNames = "username"
+    )
+)
 public class User {
 
-   @Id
-   @GeneratedValue(strategy = GenerationType.UUID)
-   private UUID id;
+  private static final int MAX_USERNAME_LENGTH = 100;
+  private static final int MAX_PASSWORD_HASH_LENGTH = 255;
 
-   @Column(nullable = false, length = 100, updatable = false)
-   private String username;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-   @Column(nullable = false, length = 255)
-   private String passwordHash;
+  @Column(nullable = false, length = 100, updatable = false)
+  private String username;
 
-   @ManyToMany(fetch = FetchType.LAZY)
-   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-   private Set<Role> roles = new HashSet<>();
+  @Column(nullable = false)
+  private String passwordHash;
 
-   @Column(nullable = false)
-   private boolean enabled;
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(
+      name = "user_roles",
+      joinColumns = @JoinColumn(
+          name = "user_id",
+          nullable = false,
+          foreignKey = @ForeignKey(name = "fk_user_roles_user")
+      ),
+      inverseJoinColumns = @JoinColumn(
+          name = "role_id",
+          nullable = false,
+          foreignKey = @ForeignKey(name = "fk_user_roles_role")
+      )
+  )
+  private Set<Role> roles = new HashSet<>();
 
-   @Column(nullable = false)
-   private Instant createdAt;
+  @Column(nullable = false)
+  private boolean enabled;
 
-   @Column(nullable = false)
-   private Instant updatedAt;
+  @Column(nullable = false)
+  private Instant createdAt;
 
-   protected User() {
-   }
+  /**
+   * Timestamp of the last modification to the user entity.
+   *
+   * <p>This field is part of the persistent audit state and is managed
+   * through JPA field-based access. Application code intentionally does not expose this attribute.
+   */
+  @SuppressWarnings("unused")
+  @Column(nullable = false)
+  private Instant updatedAt;
 
-   private User(String username, String passwordHash, Set<Role> roles) {
+  protected User() {
+  }
 
-	  this.username = requireNonBlank(username, "username");
+  private User(String username, String passwordHash, Set<Role> roles) {
+    this.username = requireUsername(username);
+    this.passwordHash = requirePasswordHash(passwordHash);
+    this.roles = copyAndValidateRoles(roles);
+    this.enabled = true;
+    Instant now = Instant.now();
+    this.createdAt = now;
+    this.updatedAt = now;
+  }
 
-	  this.passwordHash = requireNonBlank(passwordHash, "passwordHash");
+  public static User create(String username, String passwordHash, Set<Role> roles) {
+    return new User(username, passwordHash, roles);
+  }
 
-	  this.roles = copyAndValidateRoles(roles);
-	  this.enabled = true;
+  private static String requireUsername(String username) {
 
-	  Instant now = Instant.now();
-	  this.createdAt = now;
-	  this.updatedAt = now;
-   }
+    Objects.requireNonNull(
+        username,
+        "username must not be null"
+    );
 
-   public static User create(String username, String passwordHash, Set<Role> roles) {
+    if (username.isBlank()) {
+      throw new IllegalArgumentException(
+          "username must not be blank"
+      );
+    }
 
-	  return new User(username, passwordHash, roles);
-   }
+    if (!username.equals(username.strip())) {
+      throw new IllegalArgumentException(
+          "username must not have leading or trailing whitespace"
+      );
+    }
 
-   private static String requireNonBlank(String value, String fieldName) {
+    if (username.length() > MAX_USERNAME_LENGTH) {
+      throw new IllegalArgumentException(
+          "username exceeds the maximum length."
+      );
+    }
 
-	  Objects.requireNonNull(value, fieldName + " must not be null");
+    return username;
+  }
 
-	  if (value.isBlank()) {
-		 throw new IllegalArgumentException(fieldName + " must not be blank");
-	  }
+  private static String requirePasswordHash(String passwordHash) {
 
-	  return value;
-   }
+    Objects.requireNonNull(
+        passwordHash,
+        "passwordHash must not be null"
+    );
 
-   private static Set<Role> copyAndValidateRoles(Set<Role> roles) {
+    if (passwordHash.isBlank()) {
+      throw new IllegalArgumentException(
+          "passwordHash must not be blank"
+      );
+    }
 
-	  Objects.requireNonNull(roles, "roles must not be null");
+    if (passwordHash.length() > MAX_PASSWORD_HASH_LENGTH) {
+      throw new IllegalArgumentException(
+          "passwordHash exceeds the maximum length."
+      );
+    }
 
-	  if (roles.isEmpty()) {
-		 throw new IllegalArgumentException("roles must not be empty");
-	  }
+    return passwordHash;
+  }
 
-	  Set<Role> copy = new HashSet<>(roles);
+  private static Set<Role> copyAndValidateRoles(Set<Role> roles) {
+    Objects.requireNonNull(roles, "roles must not be null");
+    if (roles.isEmpty()) {
+      throw new IllegalArgumentException("roles must not be empty");
+    }
+    Set<Role> copy = new HashSet<>(roles);
+    if (copy.stream().anyMatch(Objects::isNull)) {
+      throw new IllegalArgumentException("roles must not contain null elements");
+    }
 
-	  if (copy.stream().anyMatch(Objects::isNull)) {
-		 throw new IllegalArgumentException("roles must not contain null elements");
-	  }
+    validateRoleCombination(copy);
 
-	  return copy;
-   }
+    return copy;
+  }
 
-   public UUID getId() {
-	  return id;
-   }
+  private static void validateRoleCombination(Set<Role> roles) {
 
-   public String getUsername() {
-	  return username;
-   }
+    boolean hasAdminRole = false;
+    boolean hasBankOperatorRole = false;
 
-   public String getPasswordHash() {
-	  return passwordHash;
-   }
+    for (Role role : roles) {
 
-   public Set<Role> getRoles() {
-	  return Collections.unmodifiableSet(roles);
-   }
+      RoleCode roleCode = role.getCode();
 
-   public boolean isEnabled() {
-	  return enabled;
-   }
+      if (roleCode == RoleCode.ADMIN) {
+        hasAdminRole = true;
+      } else if (roleCode == RoleCode.BANK_OPERATOR) {
+        hasBankOperatorRole = true;
+      }
+    }
 
-   public Instant getCreatedAt() {
-	  return createdAt;
-   }
+    if (hasAdminRole && hasBankOperatorRole) {
+      throw new IllegalArgumentException(
+          "A user must not hold both ADMIN and BANK_OPERATOR roles."
+      );
+    }
+  }
 
-   public Instant getUpdatedAt() {
-	  return updatedAt;
-   }
+  public UUID getId() {
+    return id;
+  }
 
-   public void changePasswordHash(String passwordHash) {
+  public String getUsername() {
+    return username;
+  }
 
-	  String validatedPasswordHash = requireNonBlank(passwordHash, "passwordHash");
+  public String getPasswordHash() {
+    return passwordHash;
+  }
 
-	  if (this.passwordHash.equals(validatedPasswordHash)) {
-		 return;
-	  }
+  public Set<Role> getRoles() {
+    return Collections.unmodifiableSet(roles);
+  }
 
-	  this.passwordHash = validatedPasswordHash;
-	  touch();
-   }
+  public boolean isDisabled() {
+    return !enabled;
+  }
 
-   public void disable() {
+  public boolean hasRole(RoleCode roleCode) {
+    Objects.requireNonNull(roleCode, "roleCode must not be null");
 
-	  if (!enabled) {
-		 return;
-	  }
+    return roles.stream()
+        .anyMatch(role -> role.getCode() == roleCode);
+  }
 
-	  enabled = false;
-	  touch();
-   }
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
 
-   public void enable() {
+  public void addRole(Role role) {
+    Objects.requireNonNull(role, "role");
+    if (roles.contains(role)) {
+      return;
+    }
+    Set<Role> updatedRoles = new HashSet<>(roles);
+    updatedRoles.add(role);
+    validateRoleCombination(updatedRoles);
+    roles.add(role);
+    touch();
+  }
 
-	  if (enabled) {
-		 return;
-	  }
+  private void touch() {
+    updatedAt = Instant.now();
+  }
 
-	  enabled = true;
-	  touch();
-   }
+  @Override
+  public boolean equals(Object other) {
 
-   public void addRole(Role role) {
+    if (this == other) {
+      return true;
+    }
 
-	  Objects.requireNonNull(role, "role");
+    if (!(other instanceof User user)) {
+      return false;
+    }
 
-	  if (roles.add(role)) {
-		 touch();
-	  }
-   }
+    return username.equals(user.getUsername());
+  }
 
-   public void removeRole(Role role) {
-
-	  Objects.requireNonNull(role, "role");
-
-	  if (!roles.contains(role)) {
-		 return;
-	  }
-
-	  if (roles.size() == 1) {
-		 throw new IllegalStateException("A user must have at least one role.");
-	  }
-
-	  roles.remove(role);
-	  touch();
-   }
-
-   private void touch() {
-	  updatedAt = Instant.now();
-   }
-
-   @Override
-   public boolean equals(Object other) {
-
-	  if (this == other) {
-		 return true;
-	  }
-
-	  if (!(other instanceof User user)) {
-		 return false;
-	  }
-
-	  return username.equals(user.username);
-   }
-
-   @Override
-   public int hashCode() {
-	  return username.hashCode();
-   }
+  @Override
+  public int hashCode() {
+    return username.hashCode();
+  }
 }

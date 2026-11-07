@@ -12,15 +12,15 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
-    @Bean
-    @Order(3)
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) {
+  @Bean
+  @Order(3)
+  public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) {
 
-        http.authorizeHttpRequests(authorize -> authorize
-                        .anyRequest()
-                        .authenticated())
-                .formLogin(Customizer.withDefaults());
+    http.authorizeHttpRequests(authorize -> authorize
+            .anyRequest()
+            .authenticated())
+        .formLogin(Customizer.withDefaults());
 
-        return http.build();
-    }
+    return http.build();
+  }
 }
