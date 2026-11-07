@@ -96,7 +96,7 @@ public class BalanceInquiryService {
         fieldName + " must not be null"
     );
 
-    String normalized = value.trim();
+    String normalized = value.strip();
 
     if (normalized.isEmpty()) {
       throw new IllegalArgumentException(

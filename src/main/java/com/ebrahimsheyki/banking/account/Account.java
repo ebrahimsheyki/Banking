@@ -56,7 +56,12 @@ public class Account {
   private Customer customer;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "account_type", nullable = false, length = 20)
+  @Column(
+      name = "account_type",
+      nullable = false,
+      updatable = false,
+      length = 20
+  )
   private AccountType accountType;
 
   @Column(name = "currency_code", nullable = false, updatable = false, length = 3)
@@ -86,6 +91,13 @@ public class Account {
   @Column(nullable = false)
   private long version;
 
+  /**
+   * Required by Jakarta Persistence for entity instantiation.
+   *
+   * <p>Application code must use the {@link #open(Customer, String, AccountType, String)}
+   * factory method.
+   */
+  @SuppressWarnings("unused")
   protected Account() {
   }
 

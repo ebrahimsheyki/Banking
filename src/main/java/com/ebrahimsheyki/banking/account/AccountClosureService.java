@@ -66,7 +66,7 @@ public class AccountClosureService {
       );
     }
 
-    String accountNumber = requestedAccountNumber.trim();
+    String accountNumber = requestedAccountNumber.strip();
 
     User user = userRepository.findByUsername(
         authenticatedUsername
