@@ -1,0 +1,13 @@
+logging:
+  file:
+    name: ${BANKING_LOG_FILE:./logs/banking.jsonl}
+
+  structured:
+    format:
+      file: logstash
+
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+      total-size-cap: 100MB

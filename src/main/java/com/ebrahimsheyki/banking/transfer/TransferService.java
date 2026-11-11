@@ -10,6 +10,7 @@ import com.ebrahimsheyki.banking.customer.CustomerRepository;
 import com.ebrahimsheyki.banking.customer.CustomerStatus;
 import com.ebrahimsheyki.banking.customer.exception.CustomerNotActiveException;
 import com.ebrahimsheyki.banking.customer.exception.CustomerProfileRequiredException;
+import com.ebrahimsheyki.banking.infrastructure.aop.annotation.BankingOperation;
 import com.ebrahimsheyki.banking.ledger.LedgerService;
 import com.ebrahimsheyki.banking.security.authorization.UserAccessPolicy;
 import com.ebrahimsheyki.banking.transfer.exception.IdempotencyKeyConflictException;
@@ -78,6 +79,7 @@ public class TransferService {
     );
   }
 
+  @BankingOperation("ACCOUNT_TRANSFER")
   @Transactional
   public TransferResponse transfer(
       String authenticatedUsername,

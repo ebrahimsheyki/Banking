@@ -24,6 +24,11 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080
 
+logging:
+  structured:
+    format:
+      console: logstash
+
 banking:
   security:
     keystore:

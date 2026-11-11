@@ -3,6 +3,7 @@ package com.ebrahimsheyki.banking.customer;
 import static java.util.Objects.requireNonNull;
 
 import com.ebrahimsheyki.banking.customer.exception.CustomerAlreadyExistsException;
+import com.ebrahimsheyki.banking.infrastructure.aop.annotation.BankingOperation;
 import com.ebrahimsheyki.banking.security.authorization.UserAccessPolicy;
 import com.ebrahimsheyki.banking.user.RoleCode;
 import com.ebrahimsheyki.banking.user.User;
@@ -43,6 +44,7 @@ public class CustomerService {
     );
   }
 
+  @BankingOperation("CUSTOMER_CREATE")
   @Transactional
   public Customer createForAuthenticatedUser(
       String authenticatedUsername,

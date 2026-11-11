@@ -7,9 +7,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- =========================================================
-         Project coordinates
-         ========================================================= -->
+    <!-- Project coordinates -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -20,10 +18,8 @@
     <groupId>com.ebrahimsheyki.banking</groupId>
     <artifactId>banking</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-
     <name>banking</name>
     <description>Secure Banking Transaction System</description>
-
 
     <!-- Properties -->
     <properties>
@@ -86,7 +82,6 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
-
         <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -103,13 +98,17 @@
             <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
 
-
         <!-- Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- AOP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
+        </dependency>
 
         <!-- Database: H2 (local / demo) -->
         <dependency>
@@ -126,14 +125,12 @@
             <scope>runtime</scope>
         </dependency>
 
-
         <!-- Database: PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-
 
         <!-- Database migrations -->
         <dependency>
@@ -147,13 +144,11 @@
             <scope>runtime</scope>
         </dependency>
 
-
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-
 
         <!-- Observability -->
         <dependency>
@@ -161,9 +156,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-
         <!--     Test dependencies     -->
-
         <!-- Common testing dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -217,7 +210,6 @@
             <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
-
 
         <!-- Replacement for android-json used by the JSON assertion library -->
         <dependency>
