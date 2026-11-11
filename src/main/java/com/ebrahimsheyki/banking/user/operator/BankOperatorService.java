@@ -1,5 +1,6 @@
 package com.ebrahimsheyki.banking.user.operator;
 
+import com.ebrahimsheyki.banking.infrastructure.aop.annotation.BankingOperation;
 import com.ebrahimsheyki.banking.security.authorization.UserAccessPolicy;
 import com.ebrahimsheyki.banking.user.Role;
 import com.ebrahimsheyki.banking.user.RoleCode;
@@ -65,20 +66,16 @@ public class BankOperatorService {
     );
   }
 
+  @BankingOperation("BANK_OPERATOR_CREATE")
   @Transactional
   public BankOperatorResponse create(
       String authenticatedAdminUsername,
       BankOperatorRequest request
   ) {
-
     requireEnabledAdministrator(authenticatedAdminUsername);
-
     Objects.requireNonNull(request, "request must not be null");
-
     ensureUsernameDoesNotExist(request.username());
-
     Role bankOperatorRole = getBankOperatorRole();
-
     String passwordHash = passwordEncoder.encode(request.password());
 
     User user = User.create(
@@ -88,9 +85,7 @@ public class BankOperatorService {
     );
 
     User savedUser = userRepository.save(user);
-
     BankOperator bankOperator = BankOperator.create(savedUser);
-
     BankOperator savedBankOperator = bankOperatorRepository.save(
         bankOperator
     );
@@ -98,6 +93,7 @@ public class BankOperatorService {
     return BankOperatorResponse.from(savedBankOperator);
   }
 
+  @BankingOperation("BANK_OPERATOR_ASSIGN")
   @Transactional
   public BankOperatorResponse assignToExistingUser(String authenticatedAdminUsername, UUID userId) {
 
@@ -131,6 +127,7 @@ public class BankOperatorService {
     return BankOperatorResponse.from(savedBankOperator);
   }
 
+  @BankingOperation("BANK_OPERATOR_READ")
   @Transactional(readOnly = true)
   public BankOperatorResponse getById(
       String authenticatedAdminUsername,
@@ -151,6 +148,7 @@ public class BankOperatorService {
     return BankOperatorResponse.from(bankOperator);
   }
 
+  @BankingOperation("BANK_OPERATOR_LIST")
   @Transactional(readOnly = true)
   public BankOperatorPageResponse findAll(
       String authenticatedAdminUsername,
@@ -160,9 +158,7 @@ public class BankOperatorService {
   ) {
 
     requireEnabledAdministrator(authenticatedAdminUsername);
-
     Pageable pageable = createPageable(page, size);
-
     Page<BankOperator> operators = status == null
         ? bankOperatorRepository.findAll(pageable)
         : bankOperatorRepository.findAllByStatus(status, pageable);
@@ -170,31 +166,27 @@ public class BankOperatorService {
     return BankOperatorPageResponse.from(operators);
   }
 
+  @BankingOperation("BANK_OPERATOR_DISABLE")
   @Transactional
   public BankOperatorResponse disable(
       String authenticatedAdminUsername,
       UUID bankOperatorId
   ) {
-
     requireEnabledAdministrator(authenticatedAdminUsername);
-
     BankOperator bankOperator = findBankOperatorForUpdate(bankOperatorId);
-
     bankOperator.suspend();
 
     return BankOperatorResponse.from(bankOperator);
   }
 
+  @BankingOperation("BANK_OPERATOR_ENABLE")
   @Transactional
   public BankOperatorResponse enable(
       String authenticatedAdminUsername,
       UUID bankOperatorId
   ) {
-
     requireEnabledAdministrator(authenticatedAdminUsername);
-
     BankOperator bankOperator = findBankOperatorForUpdate(bankOperatorId);
-
     bankOperator.activate();
 
     return BankOperatorResponse.from(bankOperator);

@@ -10,6 +10,7 @@ import com.ebrahimsheyki.banking.customer.exception.CustomerAlreadyExistsExcepti
 import com.ebrahimsheyki.banking.customer.exception.CustomerNotActiveException;
 import com.ebrahimsheyki.banking.customer.exception.CustomerProfileRequiredException;
 import com.ebrahimsheyki.banking.deposit.exception.DepositAccountNotFoundException;
+import com.ebrahimsheyki.banking.infrastructure.observability.logging.RequestCorrelationFilter;
 import com.ebrahimsheyki.banking.transfer.exception.IdempotencyKeyConflictException;
 import com.ebrahimsheyki.banking.transfer.exception.InvalidIdempotencyKeyException;
 import com.ebrahimsheyki.banking.transfer.exception.InvalidTransferException;
@@ -41,6 +42,9 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -91,7 +95,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   }
 
   @ExceptionHandler(AccessDeniedException.class)
-  public ProblemDetail handleAccessDenied(HttpServletRequest request) {
+  public ProblemDetail handleAccessDenied(
+      AccessDeniedException exception,
+      HttpServletRequest request
+  ) {
+
+    LOGGER.atWarn()
+        .addKeyValue("event", "security.authorization.denied")
+        .addKeyValue("outcome", "DENIED")
+        .addKeyValue("reason", "ACCESS_DENIED")
+        .addKeyValue("httpMethod", request.getMethod())
+        .addKeyValue("requestUri", request.getRequestURI())
+        .addKeyValue("exceptionType", exception.getClass().getName())
+        .addKeyValue("actor", currentActor())
+        .log("Authorization denied");
+
     return createProblem(
         HttpStatus.FORBIDDEN,
         "Access denied",
@@ -99,6 +117,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         "ACCESS_DENIED",
         request
     );
+  }
+
+  private static String currentActor() {
+
+    Authentication authentication =
+        SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication == null
+        || !authentication.isAuthenticated()
+        || authentication instanceof AnonymousAuthenticationToken) {
+
+      return "anonymous";
+    }
+
+    return authentication.getName();
   }
 
   @NullMarked
@@ -130,6 +163,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     problem.setProperty("errors", errors);
 
+    addRequestId(
+        problem,
+        request.getAttribute(
+            RequestCorrelationFilter.REQUEST_ID_ATTRIBUTE,
+            WebRequest.SCOPE_REQUEST
+        )
+    );
+
     return handleExceptionInternal(
         exception,
         problem,
@@ -154,6 +195,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     problem.setTitle("Invalid request body");
     problem.setProperty("code", "INVALID_REQUEST_BODY");
 
+    addRequestId(
+        problem,
+        request.getAttribute(
+            RequestCorrelationFilter.REQUEST_ID_ATTRIBUTE,
+            WebRequest.SCOPE_REQUEST
+        )
+    );
     return handleExceptionInternal(
         exception,
         problem,
@@ -550,6 +598,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     problem.setTitle(title);
     problem.setInstance(URI.create(request.getRequestURI()));
     problem.setProperty("code", code);
+    addRequestId(
+        problem,
+        request.getAttribute(RequestCorrelationFilter.REQUEST_ID_ATTRIBUTE)
+    );
     return problem;
+  }
+
+  private static void addRequestId(
+      ProblemDetail problem,
+      Object requestId
+  ) {
+    if (requestId instanceof String id && !id.isBlank()) {
+      problem.setProperty("requestId", id);
+    }
   }
 }

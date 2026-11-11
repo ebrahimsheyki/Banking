@@ -6,6 +6,7 @@ import com.ebrahimsheyki.banking.customer.CustomerRepository;
 import com.ebrahimsheyki.banking.customer.CustomerStatus;
 import com.ebrahimsheyki.banking.customer.exception.CustomerNotActiveException;
 import com.ebrahimsheyki.banking.customer.exception.CustomerProfileRequiredException;
+import com.ebrahimsheyki.banking.infrastructure.aop.annotation.BankingOperation;
 import com.ebrahimsheyki.banking.security.authorization.UserAccessPolicy;
 import com.ebrahimsheyki.banking.user.RoleCode;
 import com.ebrahimsheyki.banking.user.User;
@@ -47,6 +48,7 @@ public class AccountClosureService {
     );
   }
 
+  @BankingOperation("ACCOUNT_CLOSE")
   @Transactional
   public AccountResponse closeForAuthenticatedCustomer(
       String authenticatedUsername,
